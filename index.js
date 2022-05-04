@@ -8,11 +8,7 @@ const contentType = {
     "gif": { 'content-type': 'image/gif' },
 }
 
-const memoryDb = new Map(); // est global
-let id = 0; // doit être global
-memoryDb.set(id++, { nom: "Alice" }) // voici comment set une nouvelle entrée.
-memoryDb.set(id++, { nom: "Bob" })
-memoryDb.set(id++, { nom: "Charlie" })
+const db = require('./db')
 
 const mapToObj = m => {
     return Array.from(m).reduce((obj, [key, value]) => {
@@ -36,7 +32,7 @@ const server = http.createServer((req, res) => {
         } else if (req.url === "/api/names") {
             if (req.method === "GET") {
                 res.writeHead(200, { 'content-type': 'application/json' });
-                res.write(JSON.stringify(mapToObj(memoryDb)));
+                res.write(JSON.stringify(mapToObj(db['memoryDb'])));
                 res.end();
             } else if (req.method === "POST") {
                 let data = ''
@@ -52,10 +48,10 @@ const server = http.createServer((req, res) => {
                             if (!('name' in data)) {
                                 throw 'bad request - test'
                             }
-                            let currentId = id
-                            memoryDb.set(id++, data)
+                            let currentId = db['id']
+                            db['memoryDb'].set(db['id']++, data)
                             res.writeHead(201, { 'content-type': 'application/json' });
-                            res.write(JSON.stringify(memoryDb.get(currentId)));
+                            res.write(JSON.stringify(db['memoryDb'].get(currentId)));
                             res.end();
                         }
                     } catch (err) {
@@ -73,16 +69,16 @@ const server = http.createServer((req, res) => {
         } else if (req.url.match(/\/api\/name\/*/)) {
             const split = req.url.split('/')
             const id = split[split.length - 1]
-            if (!memoryDb.has(id)) {
+            if (!db['memoryDb'].has(parseInt(id))) {
                 res.writeHead(404, { 'content-type': 'text/html' });
                 res.write(fs.readFileSync(path.join(__dirname, "public", "pages", "not_found.html")));
                 res.end();
             }else if (req.method === "GET") {
                 res.writeHead(200, { 'content-type': 'application/json' });
-                res.write(JSON.stringify(memoryDb.get(parseInt(id))));
+                res.write(JSON.stringify(db['memoryDb'].get(parseInt(id))));
                 res.end();
             } else if (req.method === "DELETE") {
-                memoryDb.delete(parseInt(id))
+                db['memoryDb'].delete(parseInt(id))
                 res.writeHead(204);
                 res.end();
             } else if (req.method === "PUT") {
@@ -99,7 +95,7 @@ const server = http.createServer((req, res) => {
                             if (!('name' in data)) {
                                 throw 'bad request - test'
                             }
-                            memoryDb.set(id, data)
+                            db['memoryDb'].set(db['id'], data)
                             res.writeHead(204);
                             res.end();
                         }
