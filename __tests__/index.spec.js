@@ -1,11 +1,11 @@
 const server = require('../index')
-const supertest = require('supertest')
+const request = require('supertest')
 
-const request = supertest(server)
+// const request = supertest(server)
 
 describe("L'api name", () => {
     test('GET /api/names', async () => {
-        const response = await request
+        const response = await request(server)
             .get('/api/names')
             .expect(200)
             .expect('Content-Type', 'application/json')
@@ -14,5 +14,15 @@ describe("L'api name", () => {
             '1': { nom: 'Bob' },
             '2': { nom: 'Charlie' }
         })
+    })
+})
+
+describe("Syteme statique", () => {
+    test("GET /", async () => {
+        const response = await request(server)
+            .get('/')
+            .expect(200)
+            .expect('Content-Type', 'text/html')
+        expect(response.text).toMatch(/HELLO/)
     })
 })
